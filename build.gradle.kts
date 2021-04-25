@@ -9,14 +9,16 @@ plugins {
     jacoco
     id("net.kyori.indra.license-header") version "1.3.1"
     id("org.sonarqube") version "3.1.1"
-    id("io.franzbecker.gradle-lombok") version "4.0.0"
+    id("io.freefair.lombok") version "6.0.0-m2"
     id("me.qoomon.git-versioning") version "4.2.0"
     id("com.github.ben-manes.versions") version "0.38.0"
-    id("io.freefair.javadoc-links") version "5.3.3.3"
-    id("org.springframework.boot") version "2.4.4"
+    id("io.freefair.javadoc-links") version "6.0.0-m2"
+    id("io.freefair.javadoc-utf-8") version "6.0.0-m2"
+    id("org.springframework.boot") version "2.4.5"
     id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("com.github.1c-syntax.bslls-dev-tools") version "0.3.3"
-    id("io.freefair.aspectj.post-compile-weaving") version "5.3.3.3"
+    id("io.freefair.aspectj.post-compile-weaving") version "6.0.0-m2"
+    id("io.freefair.maven-central.validate-poms") version "6.0.0-m2"
     id("ru.vyarus.pom") version "2.1.0"
 }
 
@@ -25,7 +27,7 @@ repositories {
     maven(url = "https://jitpack.io")
 }
 
-group = "com.github.1c-syntax"
+group = "io.github.1c-syntax"
 
 gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     preferTags = true
@@ -42,7 +44,7 @@ gitVersioning.apply(closureOf<GitVersioningPluginConfig> {
     })
 })
 
-val languageToolVersion = "5.2"
+val languageToolVersion = "5.3"
 
 dependencies {
 
@@ -53,7 +55,7 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.6.1")
 
     // lsp4j core
-    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.11.0")
+    api("org.eclipse.lsp4j", "org.eclipse.lsp4j", "0.12.0")
 
     // 1c-syntax
     api("com.github.1c-syntax", "bsl-parser", "0.18.0") {
@@ -77,22 +79,18 @@ dependencies {
 
     // commons utils
     implementation("commons-io", "commons-io", "2.8.0")
-    implementation("org.apache.commons", "commons-lang3", "3.11")
+    implementation("org.apache.commons", "commons-lang3", "3.12.0")
     implementation("commons-beanutils", "commons-beanutils", "1.9.4")
     implementation("org.apache.commons", "commons-collections4", "4.4")
 
     // progress bar
-    implementation("me.tongfei", "progressbar", "0.9.0")
+    implementation("me.tongfei", "progressbar", "0.9.1")
 
     // (de)serialization
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml")
 
     // COMPILE
-
-    // lombok
-    compileOnly("org.projectlombok", "lombok", lombok.version)
-    annotationProcessor("org.projectlombok", "lombok", lombok.version)
 
     // stat analysis
     compileOnly("com.google.code.findbugs", "jsr305", "3.0.2")
@@ -105,7 +103,7 @@ dependencies {
     }
 
     // test utils
-    testImplementation("com.ginsberg", "junit5-system-exit", "1.0.0")
+    testImplementation("com.ginsberg", "junit5-system-exit", "1.1.1")
     testImplementation("org.awaitility", "awaitility", "4.0.3")
 }
 
@@ -208,40 +206,6 @@ sonarqube {
     }
 }
 
-lombok {
-    version = "1.18.18"
-    sha256 = "601ec46206e0f9cac2c0583b3350e79f095419c395e991c761640f929038e9cc"
-}
-
-tasks {
-    val delombok by registering(JavaExec::class) {
-        dependsOn(compileJava)
-
-        main = project.extensions.findByType(io.franzbecker.gradle.lombok.LombokPluginExtension::class)!!.main
-        args = listOf("delombok")
-        classpath = project.configurations.getByName("compileClasspath")
-
-        jvmArgs = listOf("-Dfile.encoding=UTF-8")
-        val outputDir by extra { file("$buildDir/delombok") }
-        outputs.dir(outputDir)
-        sourceSets["main"].java.srcDirs.forEach {
-            inputs.dir(it)
-            args(it, "-d", outputDir)
-        }
-        doFirst {
-            outputDir.delete()
-        }
-    }
-
-    javadoc {
-        dependsOn(delombok)
-        val outputDir: File by delombok.get().extra
-        source = fileTree(outputDir)
-        isFailOnError = false
-        options.encoding = "UTF-8"
-    }
-}
-
 artifacts {
     archives(tasks["jar"])
     archives(tasks["sourcesJar"])
@@ -254,6 +218,57 @@ publishing {
         create<MavenPublication>("maven") {
             from(components["java"])
             artifact(tasks["bootJar"])
+
+            pom {
+                description.set("Language Server Protocol implementation for 1C (BSL) - 1C:Enterprise 8 and OneScript languages.")
+                url.set("https://1c-syntax.github.io/bsl-language-server")
+                licenses {
+                    license {
+                        name.set("GNU LGPL 3")
+                        url.set("https://www.gnu.org/licenses/lgpl-3.0.txt")
+                        distribution.set("repo")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("asosnoviy")
+                        name.set("Alexey Sosnoviy")
+                        email.set("labotamy@gmail.com")
+                        url.set("https://github.com/asosnoviy")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("nixel2007")
+                        name.set("Nikita Gryzlov")
+                        email.set("nixel2007@gmail.com")
+                        url.set("https://github.com/nixel2007")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("theshadowco")
+                        name.set("Valery Maximov")
+                        email.set("maximovvalery@gmail.com")
+                        url.set("https://github.com/theshadowco")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                    developer {
+                        id.set("otymko")
+                        name.set("Oleg Tymko")
+                        email.set("olegtymko@yandex.ru")
+                        url.set("https://github.com/otymko")
+                        organization.set("1c-syntax")
+                        organizationUrl.set("https://github.com/1c-syntax")
+                    }
+                }
+                scm {
+                    connection.set("scm:git:git://github.com/1c-syntax/bsl-language-server.git")
+                    developerConnection.set("scm:git:git@github.com:1c-syntax/bsl-language-server.git")
+                    url.set("https://github.com/1c-syntax/bsl-language-server")
+                }
+            }
         }
     }
 }
