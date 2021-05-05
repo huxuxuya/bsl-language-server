@@ -203,3 +203,26 @@
 Процедура BUG_1620(МассивСтрок)
 
 КонецПроцедуры
+
+// Specifies settings for reading values from JSON format
+//
+// Returns:
+//  Structure - contains:
+// * ReadToMap - Boolean - default is True
+// * PropertiesWithDateValuesNames - Array contains String - for every fields with date values
+//                                 - String - if JSON has only one date field
+// * ExpectedDateFormat - JSONDateFormat - default is ISO "YYYY-MM-DDTHH:MM:SSZ" example "2009-02-15T00:00:00Z"
+// * Encoding - TextEncoding - default is UTF-8
+//            - String - JSONReader.OpenStream encodings
+//
+Function BUG_1641() Export
+
+    Self = New Structure;
+    Self.Insert("ReadToMap", True);
+    Self.Insert("PropertiesWithDateValuesNames", New Array);
+    Self.Insert("ExpectedDateFormat", JSONDateFormat.ISO);
+    Self.Insert("Encoding", TextEncoding.UTF8);
+
+    Return Self;
+
+EndFunction
