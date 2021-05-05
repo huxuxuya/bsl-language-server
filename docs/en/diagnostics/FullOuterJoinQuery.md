@@ -7,12 +7,11 @@
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
 <!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
-
-You should not use FULL OUTER JOIN in queries, especially in PostgreSQL database. It is better to rewrite query without FULL OUTER JOIN.  
+You should not use FULL OUTER JOIN in queries, especially in PostgreSQL database. It is better to rewrite query without FULL OUTER JOIN.
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 Query below will lead to high load on PostgreSQL database.
-```
+```bsl
 Procedure Test1()
 
     Query = New Query;
